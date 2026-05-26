@@ -5,11 +5,10 @@ set -eu
 
 DATA_DIR="${AGENTMEMORY_DATA_DIR:-/data}"
 HMAC_FILE="${DATA_DIR}/.hmac"
-RUN_AS="node:node"
 III_CONFIG="/opt/agentmemory/node_modules/@agentmemory/agentmemory/dist/iii-config.yaml"
 
 mkdir -p "$DATA_DIR"
-chown -R "$RUN_AS" "$DATA_DIR"
+chown -R node:node "$DATA_DIR"
 
 # Write iii-config.yaml with 0.0.0.0 bindings and /data absolute paths.
 # This overwrites the npm-bundled config which binds 127.0.0.1 and uses
@@ -66,7 +65,7 @@ workers:
       logs_enabled: true
       logs_console_output: true
 EOF
-chown "$RUN_AS" "$III_CONFIG"
+chown node:node "$III_CONFIG"
 
 # Resolve AGENTMEMORY_SECRET.
 # Priority: (1) env var provided at runtime, (2) persisted /data/.hmac from prior run.
@@ -74,7 +73,7 @@ chown "$RUN_AS" "$III_CONFIG"
 if [ -n "${AGENTMEMORY_SECRET:-}" ]; then
   printf '%s\n' "$AGENTMEMORY_SECRET" > "$HMAC_FILE"
   chmod 600 "$HMAC_FILE"
-  chown "$RUN_AS" "$HMAC_FILE"
+  chown node:node "$HMAC_FILE"
   echo "[entrypoint] Using provided AGENTMEMORY_SECRET."
 elif [ -s "$HMAC_FILE" ]; then
   AGENTMEMORY_SECRET="$(cat "$HMAC_FILE")"
@@ -94,5 +93,8 @@ fi
 
 export AGENTMEMORY_SECRET
 
-echo "[entrypoint] Setup complete. Starting supervisord as node user..."
-exec gosu "$RUN_AS" supervisord -c /etc/supervisor/supervisord.conf
+echo "[entrypoint] Setup complete. Starting supervisord..."
+# supervisord runs as root so it can write to /dev/stdout and /dev/stderr.
+# Each program in supervisord.conf has user=node so the actual processes
+# run unprivileged.
+exec supervisord -c /etc/supervisor/supervisord.conf
