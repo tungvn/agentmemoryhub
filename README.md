@@ -20,11 +20,15 @@ export AGENTMEMORY_SECRET=$(openssl rand -hex 32)
 docker run -d \
   -e AGENTMEMORY_SECRET="$AGENTMEMORY_SECRET" \
   -p 3111:3111 \
+  -p 3112:3112 \
+  -p 3113:3113 \
   -v agentmemory-data:/data \
   ghcr.io/tungvn/agentmemoryhub:latest
 ```
 
 Health check: `curl http://localhost:3111/agentmemory/livez`
+
+Real-time viewer: `open http://localhost:3113`
 
 ## Docker Compose
 
@@ -79,7 +83,10 @@ Build args (all have defaults):
 | Port | Protocol | Description |
 |------|----------|-------------|
 | `3111` | HTTP | REST API + MCP endpoint |
-| `3112` | HTTP | Streaming (internal, not published by default) |
+| `3112` | WebSocket | iii streaming engine |
+| `3113` | HTTP | Real-time viewer UI (`http://localhost:3113`) |
+
+> The viewer server in the upstream npm package binds to `127.0.0.1` by default. This image patches the bind address to `0.0.0.0` at build time so port 3113 is reachable from the host without a tunnel.
 
 ## License
 
