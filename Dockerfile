@@ -47,7 +47,9 @@ RUN printf '{"name":"agentmemory-deploy","version":"1.0.0","private":true,"overr
          onnxruntime-node \
          --no-fund --no-audit \
     && ln -s /opt/agentmemory/node_modules/.bin/agentmemory /usr/local/bin/agentmemory \
-    && npm cache clean --force
+    && npm cache clean --force \
+    && find node_modules/@agentmemory/agentmemory/dist -name "*.mjs" \
+         -exec sed -i 's/server\.listen(currentPort, "127\.0\.0\.1")/server.listen(currentPort, "0.0.0.0")/g' {} \;
 
 # Pre-bake all-MiniLM-L6-v2 ONNX embedding model into the image layer.
 # At runtime, TRANSFORMERS_CACHE points here — no network download needed.
@@ -60,7 +62,7 @@ COPY --chmod=0755 start-cloudflared.sh /usr/local/bin/start-cloudflared.sh
 COPY supervisord.conf /etc/supervisor/supervisord.conf
 
 VOLUME /data
-EXPOSE 3111
+EXPOSE 3111 3112 3113
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD curl -fsS http://127.0.0.1:3111/agentmemory/livez || exit 1

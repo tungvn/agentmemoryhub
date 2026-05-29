@@ -10,6 +10,8 @@ services:
     restart: unless-stopped
     ports:
       - "3111:3111"
+      - "3112:3112"
+      - "3113:3113"
     env_file:
       - .env
     volumes:
