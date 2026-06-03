@@ -8,4 +8,10 @@ if [ -z "${CLOUDFLARE_TOKEN}" ]; then
 fi
 
 echo "[cloudflared] Starting named tunnel..."
-exec cloudflared tunnel --no-autoupdate run --token "${CLOUDFLARE_TOKEN}"
+# --protocol http2: TCP-based, surfaces dead sockets after sleep/network loss far
+#   more reliably than the default QUIC (UDP NAT mappings expire silently on sleep).
+# --retries 10: more reconnect attempts before giving up after a WiFi drop.
+exec cloudflared tunnel --no-autoupdate \
+  --protocol http2 \
+  --retries 10 \
+  run --token "${CLOUDFLARE_TOKEN}"
