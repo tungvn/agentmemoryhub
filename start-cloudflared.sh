@@ -10,9 +10,8 @@ fi
 echo "[cloudflared] Starting named tunnel..."
 # --protocol http2: TCP-based, surfaces dead sockets after sleep/network loss far
 #   more reliably than the default QUIC (UDP NAT mappings expire silently on sleep).
-# --grace-period / --retries: tune reconnect backoff after WiFi drops.
+# --retries 10: more reconnect attempts before giving up after a WiFi drop.
 exec cloudflared tunnel --no-autoupdate \
   --protocol http2 \
-  --grace-period 30s \
   --retries 10 \
   run --token "${CLOUDFLARE_TOKEN}"

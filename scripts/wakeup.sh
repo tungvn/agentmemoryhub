@@ -34,5 +34,13 @@ if ! "$DOCKER" info >/dev/null 2>&1; then
 fi
 
 echo "[$(date)] restarting agentmemory tunnel..." >> "$LOG"
-cd "$PROJECT_DIR" && "$DOCKER" compose restart agentmemory >> "$LOG" 2>&1
-echo "[$(date)] done." >> "$LOG"
+if ! cd "$PROJECT_DIR"; then
+  echo "[$(date)] PROJECT_DIR not found: $PROJECT_DIR — skipping restart." >> "$LOG"
+  exit 1
+fi
+if "$DOCKER" compose restart agentmemory >> "$LOG" 2>&1; then
+  echo "[$(date)] done." >> "$LOG"
+else
+  echo "[$(date)] restart failed." >> "$LOG"
+  exit 1
+fi
